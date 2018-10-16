@@ -3,9 +3,6 @@ import pandas as pd
 from ipywidgets import FloatProgress
 from IPython.display import display
 
-f = FloatProgress(min=0, max=(len(df['dataid']) - 1))
-display(f)
-
 #1.1
 df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
 # data_id = df['dataid'].nunique()
@@ -20,6 +17,11 @@ df = df.reset_index(drop = True)
 # two type of malfunction
 # 1: data reports back when change in gas use is < 2 cubic foot
 # 2: data reports back new meter_value is smaller than old meter_value
+
+f = FloatProgress(min=0, max=(len(df['dataid']) - 1))
+display(f)
+f2 = FloatProgress(min=0, max=2)
+display(f2)
 
 malfunction = pd.DataFrame(columns = ["localminute", "dataid", "meter_value"])
 
@@ -42,6 +44,7 @@ for index in range(len(df['dataid']) - 1):
 #         index += 1
               
 malfunction = malfunction.drop_duplicates(keep = 'first')
+f2.value+=1
 malfunction = malfunction.reset_index(drop = True)
 
 malfunction
