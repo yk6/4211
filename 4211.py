@@ -1,12 +1,17 @@
 import numpy as np
 import pandas as pd
+from ipywidgets import FloatProgress
+from IPython.display import display
+
+f = FloatProgress(min=0, max=(len(df['dataid']) - 1))
+display(f)
 
 #1.1
-# df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
+df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
 # data_id = df['dataid'].nunique()
 # print("number of house =", data_id)
 
-df = pd.read_csv("./short10000data.csv")
+# df = pd.read_csv("./short10000data.csv")
 
 # sort data into order by id, if same id then by time
 df = df.sort_values(["dataid", "localminute"], ascending=[True, True])
@@ -25,17 +30,18 @@ for index in range(len(df['dataid']) - 1):
     if ((df['meter_value'][index] <= df['meter_value'][index - 1]) 
         and (df['dataid'][index] == df['dataid'][index - 1])):
         malfunction.loc[df.index[index]] = df.iloc[index]
-
-# type 2 malfunction
-for index in range(len(df['dataid']) - 1):
-    if (index == 0):
-        index += 1
     if ((df['localminute'][index] != df['localminute'][index - 1]) 
         and ((df['meter_value'][index] - df['meter_value'][index - 1]) < 2)
         and (df['dataid'][index] == df['dataid'][index - 1])):
         malfunction.loc[df.index[index]] = df.iloc[index]
+    f.value += 1
+
+# type 2 malfunction
+# for index in range(len(df['dataid']) - 1):
+#     if (index == 0):
+#         index += 1
               
-malfunction.drop_duplicates(keep = 'first')
+malfunction = malfunction.drop_duplicates(keep = 'first')
 malfunction = malfunction.reset_index(drop = True)
 
 malfunction
