@@ -7,13 +7,11 @@ start_time = timeit.default_timer()
 pd.options.mode.chained_assignment = None 
 
 #1.1
-
-df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
+# df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
 # data_id = df['dataid'].nunique()
 # print("number of house =", data_id)
 
-# df = pd.read_csv("./short10000data.csv")
-# df = pd.read_csv('./200k.csv')
+df = pd.read_csv("./short100data.csv")
 
 # Sort data into order by id, if same id then by time
 df.sort_values(["dataid", "localminute"], ascending=[True, True], inplace = True)
