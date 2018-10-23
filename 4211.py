@@ -97,3 +97,56 @@ malfunction.to_csv('./malfunction.csv', index = False)
 print("total: %ds" %(timeit.default_timer() - start_time))
 
 #1.2
+
+import pandas as pd
+import numpy as np
+import datetime as dt
+from collections import namedtuple
+
+gas_data = pd.read_csv('./csv/clean_df.csv')
+len(gas_data)
+
+gas_data.localminute = gas_data.localminute.str.slice(0, 19)
+gas_data.localminute = pd.to_datetime(gas_data.localminute,
+        infer_datetime_format=True, format='%Y/%m/%d %I:%M:%S %p')
+gas_data.localminute = gas_data.localminute.map(lambda x: \
+        x.replace(minute=0, second=0))
+
+# gas_data=gas_data[gas_data['dataid']==35];
+
+_hr = dt.timedelta(hours=1)
+temp_gas_hr = pd.DataFrame(columns=gas_data.columns)
+temp_gas_hr = gas_data
+id_list = gas_data['dataid'].unique()
+ind = 0
+
+# temp_row=namedtuple('temp_row',gas_data.columns)
+
+for _id in id_list:
+
+    ind = ind + 1
+
+    temp_gas_data = gas_data[gas_data['dataid'] == _id]
+    temp_gas_data.reset_index(drop=True, inplace=True)
+    for (index, row) in temp_gas_data.iterrows():
+        if index == 0:
+            prev_row = row.copy()
+        else:
+            time_diff = row.localminute - prev_row.localminute
+            if time_diff > _hr:
+                time_diff = int(time_diff.total_seconds() / 3600)
+                for j in range(1, time_diff):
+                    time_change = dt.timedelta(hours=j)
+                    new_time = prev_row.localminute + time_change
+                    temp_row.localminute = new_time
+                    temp_gas_hr = temp_gas_hr.append(temp_row)
+
+        prev_row = row.copy()
+        temp_row = prev_row.copy()
+
+temp_gas_hr.drop_duplicates(['localminute', 'dataid'], keep='last',
+                            inplace=True)
+
+temp_gas_hr = temp_gas_hr.sort_values(by=['dataid', 'localminute'])
+temp_gas_hr.reset_index(drop=True, inplace=True)
+temp_gas_hr.to_csv('hourly_readings_final.csv', index = False)
