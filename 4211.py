@@ -3,15 +3,18 @@ import pandas as pd
 from ipywidgets import FloatProgress
 from IPython.display import display
 import timeit
-start_time = timeit.default_timer()
-pd.options.mode.chained_assignment = None 
+from datetime import timedelta
+start_time = timeit.default_timer() * 1000
+# pd.options.mode.chained_assignment = None 
 
 #1.1
-# df = pd.read_csv("./4211 proj/dataport-export_gas_oct2015-mar2016.csv")
+
+# df = pd.read_csv("./4211 proj/csv/dataport-export_gas_oct2015-mar2016.csv")
 # data_id = df['dataid'].nunique()
 # print("number of house =", data_id)
 
-df = pd.read_csv("./short100data.csv")
+df = pd.read_csv("./4211 proj/csv/sorted100.csv")
+# df = pd.read_csv('./200k.csv')
 
 # Sort data into order by id, if same id then by time
 df.sort_values(["dataid", "localminute"], ascending=[True, True], inplace = True)
@@ -21,9 +24,10 @@ df.localminute = df.localminute.str.slice(0,19)
 df.localminute = pd.to_datetime(df.localminute, infer_datetime_format = True, format = "%Y/%m/%d %I:%M:%S %p")
 
 # two type of malfunction
-# 1: data reports back when change in gas use is < 2 cubic foot
-# 2: data reports back new meter_value is smaller than old meter_value
-# However, continuous report of same reading from same id over 12hrs,
+# 1: data reported back when change in gas use is < 2 cubic foot
+# 2: data reported back new meter_value is smaller than old meter_value
+# 3: data reported back is >2, but time > 15s, threshold value = 7/hr (US household average daily usage = 168)
+# 4: However, continuous report of same reading from same id over 12hrs,
 # the first reading after 12hrs will be treated as good reading
 
 # Progress bar cuz I always feel it is not working
@@ -68,7 +72,11 @@ for row in df.itertuples():
                 to_drop.append(row.Index)
         prev_good = False
     else:
-        prev_good = True 
+        prev_good = True  
+        if(((row.meter_value - df.meter_value[row.Index-1]) > 2) 
+           and ((((row.localminute - df.localminute[row.Index-1]) / timedelta(hours = 1)) * 7) 
+                > (row.meter_value - df.meter_value[row.Index - 1]))):
+            bad_array[-1][2] = row.localminute
 
 #Remove some values to speed up the time, those removed time are kept tracked in bad_array
 df.drop(index = to_drop, inplace = True)
@@ -94,8 +102,8 @@ malfunction.to_csv('./malfunction.csv', index = False)
 
 # pd.set_option('display.max_rows', 10000)
 
-print("total: %ds" %(timeit.default_timer() - start_time))
-
+elapsed = timeit.default_timer() * 1000 - start_time
+print("total: %ds" %(elapsed/1000)) if ((elapsed > 5000) == True) else print("total: %dms" %elapsed)
 #1.2
 
 import pandas as pd
